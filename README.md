@@ -51,6 +51,12 @@ Design de referência em [design_handoff_backlog_treino/](design_handoff_backlog
 - **Privacidade**: o cliente usa apenas a anon key; o isolamento entre contas é garantido
   pelas políticas de RLS no Postgres, não por filtro no cliente.
 
+## Deploy
+
+Produção: **https://backlog-treino.vercel.app** (projeto Vercel `backlog-treino`, conectado
+a este repositório — todo push na branch `main` faz deploy automático). As variáveis
+`VITE_SUPABASE_*` estão configuradas no ambiente Production da Vercel.
+
 ## Fora de escopo (por ora)
 
 Billing/assinaturas e empacotamento nativo (Capacitor) — a arquitetura (contas privadas,
