@@ -36,6 +36,30 @@ const SEED: Record<string, SeedEx> = {
 
 const WEEKS = 8
 
+const DEFAULT_FICHAS: [string, string, string[]][] = [
+  ['A', 'Peito e Tríceps', ['Supino Reto', 'Supino Inclinado Halteres', 'Crucifixo na Polia', 'Tríceps Corda', 'Tríceps Francês']],
+  ['B', 'Costas e Bíceps', ['Barra Fixa', 'Remada Curvada', 'Puxada Alta', 'Rosca Direta', 'Rosca Martelo']],
+  ['C', 'Pernas', ['Agachamento Livre', 'Leg Press', 'Cadeira Extensora', 'Mesa Flexora', 'Panturrilha em Pé']],
+  ['D', 'Ombros e Core', ['Desenvolvimento Halteres', 'Elevação Lateral', 'Elevação Frontal', 'Encolhimento', 'Abdominal Cabo']],
+]
+
+/** As 4 fichas clássicas — usadas apenas pelo botão "Carregar dados de exemplo". */
+export function defaultFichas(): Ficha[] {
+  return DEFAULT_FICHAS.map(([letter, grupo, ex], i) => ({
+    id: crypto.randomUUID(),
+    letter,
+    grupo,
+    position: i,
+    exercises: ex.map((name, j) => ({
+      id: crypto.randomUUID(),
+      name,
+      position: j,
+      setsCount: 3,
+      technique: '',
+    })),
+  }))
+}
+
 function roundHalf(n: number): number {
   return Math.round(n * 2) / 2
 }

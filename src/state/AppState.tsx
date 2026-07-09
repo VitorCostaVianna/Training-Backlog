@@ -7,7 +7,7 @@ import { parseNum, parseReps } from '../lib/format'
 import { loadActive, loadCache, loadFichaOps, loadOutbox, saveActive, saveCache, saveFichaOps, saveOutbox } from '../lib/storage'
 import type { FichaOp } from '../lib/storage'
 import { fetchFichas, fetchProfile, fetchSessions, pushFichaOp, pushProfile, pushSession } from '../lib/db'
-import { generateExampleSessions } from '../lib/exampleData'
+import { defaultFichas, generateExampleSessions } from '../lib/exampleData'
 import { supabase } from '../lib/supabase'
 
 interface AppStateValue {
@@ -21,6 +21,7 @@ interface AppStateValue {
   setTab: (t: Tab) => void
   active: ActiveWorkout | null
   restUntil: number | null
+  restDuration: number
   progressEx: string
   setProgressEx: (name: string) => void
   startFicha: (ficha: Ficha) => void
@@ -65,6 +66,7 @@ export function AppProvider({ userId, email, children }: { userId: string; email
   // Com treino em andamento, o app reabre direto na aba Treino (retomada na academia).
   const [tab, setTab] = useState<Tab>(() => (loadActive(userId) ? 'treino' : 'inicio'))
   const [restUntil, setRestUntil] = useState<number | null>(null)
+  const [restDuration, setRestDuration] = useState<number>(90)
   const [progressEx, setProgressEx] = useState<string>('')
 
   const flushing = useRef(false)
@@ -240,6 +242,7 @@ export function AppProvider({ userId, email, children }: { userId: string; email
 
   const startRest = useCallback(() => {
     const secs = profile?.descansoSegundos ?? 90
+    setRestDuration(secs)
     setRestUntil(Date.now() + secs * 1000)
   }, [profile])
 
@@ -413,8 +416,14 @@ export function AppProvider({ userId, email, children }: { userId: string; email
   )
 
   const loadExampleData = useCallback(() => {
-    enqueueSessions(generateExampleSessions(fichas, new Date()))
-  }, [fichas, enqueueSessions])
+    // Conta vazia: o exemplo cria também as 4 fichas clássicas (A–D).
+    let baseFichas = fichas
+    if (baseFichas.length === 0) {
+      baseFichas = defaultFichas()
+      for (const f of baseFichas) saveFicha(f, [])
+    }
+    enqueueSessions(generateExampleSessions(baseFichas, new Date()))
+  }, [fichas, saveFicha, enqueueSessions])
 
   const signOut = useCallback(() => {
     supabase.auth.signOut()
@@ -431,6 +440,7 @@ export function AppProvider({ userId, email, children }: { userId: string; email
     setTab,
     active,
     restUntil,
+    restDuration,
     progressEx,
     setProgressEx,
     startFicha,

@@ -24,6 +24,7 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -34,8 +35,40 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Toque de app nativo: botões e labels não são texto selecionável,
+   respondem ao pressionar e mostram foco só via teclado. */
 button {
   font-family: var(--sans);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: transform 0.08s ease;
+  }
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pill,
+.chip,
+.section-label,
+.micro-label,
+.day-label,
+.card-label,
+.ficha-badge,
+.tab-bar,
+.rest-pill {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 input,
@@ -222,6 +255,9 @@ a:hover {
   font-size: 11px;
   color: var(--text-2);
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-start {
@@ -259,6 +295,15 @@ a:hover {
   font-size: 14px;
   font-weight: 600;
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ficha-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .session-meta {
@@ -404,6 +449,13 @@ a:hover {
   cursor: pointer;
 }
 
+.workout-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 0 10px;
+}
+
 .workout-ficha-label {
   font-family: var(--mono);
   font-size: 10px;
@@ -411,6 +463,9 @@ a:hover {
   letter-spacing: 0.12em;
   color: var(--accent);
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .workout-timer {
@@ -949,6 +1004,29 @@ a:hover {
   gap: 14px;
   box-shadow: 0 8px 28px rgba(200, 240, 74, 0.3);
   z-index: 60;
+  overflow: hidden;
+}
+
+/* Preenchimento que esvazia junto com o tempo de descanso */
+.rest-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(12, 13, 15, 0.14);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rest-progress {
+    transition: width 1s linear;
+  }
+}
+
+.rest-pill > .rest-count,
+.rest-pill > .rest-word,
+.rest-pill > .rest-cancel {
+  position: relative;
 }
 
 .rest-count {
@@ -1382,6 +1460,8 @@ a:hover {
   font-weight: 700;
   color: #ff8d7a;
   cursor: pointer;
+  /* zona destrutiva afastada do "+ Exercício" para evitar toque acidental */
+  margin-top: 22px;
 }
 
 /* ============ Config ausente ============ */

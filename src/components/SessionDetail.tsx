@@ -17,7 +17,7 @@ export function SessionDetail({ session, onClose }: { session: Session; onClose:
           <button className="btn-abandon" onClick={onClose}>
             ✕
           </button>
-          <div style={{ textAlign: 'center' }}>
+          <div className="workout-title">
             <div className="workout-ficha-label">
               Treino {session.fichaLetter} · {session.grupo}
             </div>

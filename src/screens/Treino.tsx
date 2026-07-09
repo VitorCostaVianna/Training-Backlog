@@ -12,7 +12,11 @@ function NoActive() {
       <div className="screen-title">Treino</div>
       <div className="empty-card">
         <div className="empty-title">Nenhum treino em andamento</div>
-        <div className="empty-sub">Escolha uma ficha para começar a registrar.</div>
+        <div className="empty-sub">
+          {fichas.length === 0
+            ? 'Crie uma ficha na aba Início para começar a registrar.'
+            : 'Escolha uma ficha para começar a registrar.'}
+        </div>
       </div>
       <div className="stack">
         {fichas.map((f) => (
@@ -66,7 +70,7 @@ export function Treino() {
         >
           ✕
         </button>
-        <div style={{ textAlign: 'center' }}>
+        <div className="workout-title">
           <div className="workout-ficha-label">
             Treino {active.fichaLetter} · {active.grupo}
           </div>

@@ -70,14 +70,19 @@ export function Inicio({
 
       <div className="stack">
         <div className="section-label">Fichas</div>
+        {fichas.length === 0 && (
+          <div className="empty-card">
+            <div className="empty-title">Nenhuma ficha ainda</div>
+            <div className="empty-sub">Crie sua primeira ficha de treino abaixo.</div>
+          </div>
+        )}
         {fichas.map((f) => (
           <div className="ficha-card" key={f.id}>
             <div className="ficha-badge">{f.letter}</div>
             <div className="ficha-info">
               <div className="ficha-name">{f.grupo}</div>
               <div className="ficha-sub">
-                {f.exercises.length} exercícios ·{' '}
-                {lastByFicha.has(f.id) ? 'último ' + fmtDate(lastByFicha.get(f.id)!) : 'nunca feito'}
+                {f.exercises.length} exercícios · {lastByFicha.has(f.id) ? fmtDate(lastByFicha.get(f.id)!) : 'nunca feito'}
               </div>
             </div>
             <button className="btn-edit-ficha" onClick={() => onEditFicha(f)} aria-label={`Editar ficha ${f.letter}`}>
