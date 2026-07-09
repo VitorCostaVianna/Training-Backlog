@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050607;font-family:'Archivo',sans-serif}
+a{color:#c8f04a}a:hover{color:#daff5e}
+input,textarea{font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#c8f04a !important}
+*{box-sizing:border-box}
+@keyframes pulseGlow{0%,100%{opacity:1}50%{opacity:.55}}
+</style>
+</helmet>
+
+<div style="max-width:430px;margin:0 auto;min-height:100vh;background:#0c0d0f;color:#f2f3f0;position:relative;padding-bottom:76px">
+
+<!-- ============ INÍCIO ============ -->
+<sc-if value="{{ isInicio }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Início" style="padding:22px 20px 10px;display:flex;flex-direction:column;gap:22px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#8a8f95;text-transform:uppercase">{{ todayLabel }}</div>
+      <div style="font-size:26px;font-weight:800;letter-spacing:-.01em">Backlog de Treino</div>
+    </div>
+    <div style="width:40px;height:40px;border-radius:12px;background:#1a1c1f;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#c8f04a">{{ initials }}</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div style="background:#15171a;border-radius:14px;padding:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">Semana</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:#c8f04a">{{ weekCount }}<span style="font-size:11px;color:#8a8f95">/{{ metaSemanal }}</span></div>
+    </div>
+    <div style="background:#15171a;border-radius:14px;padding:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">Volume sem.</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600">{{ weekVolume }}<span style="font-size:11px;color:#8a8f95"> kg</span></div>
+    </div>
+    <div style="background:#15171a;border-radius:14px;padding:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">Sequência</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600">{{ streak }}<span style="font-size:11px;color:#8a8f95"> sem</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8a8f95;text-transform:uppercase">Fichas</div>
+    <sc-for list="{{ fichas }}" as="f" hint-placeholder-count="4">
+      <div style="background:#15171a;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px">
+        <div style="{{ f.badgeStyle }}">{{ f.id }}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:16px;font-weight:700">{{ f.grupo }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a8f95;margin-top:2px">{{ f.exCount }} exercícios · {{ f.lastLabel }}</div>
+        </div>
+        <button onClick="{{ f.start }}" style="background:#c8f04a;color:#0c0d0f;border:none;border-radius:12px;padding:11px 16px;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;cursor:pointer">Iniciar</button>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8a8f95;text-transform:uppercase">Últimos treinos</div>
+    <sc-for list="{{ recent }}" as="r" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:12px;background:#101214;border:1px solid #1c1f23;border-radius:14px;padding:12px 14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#c8f04a;font-weight:600;width:52px">{{ r.date }}</div>
+        <div style="flex:1;font-size:14px;font-weight:600">{{ r.title }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a8f95">{{ r.vol }} kg · {{ r.dur }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ TREINO ============ -->
+<sc-if value="{{ isTreino }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Treino">
+
+  <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ true }}">
+  <div style="padding:18px 20px 10px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button onClick="{{ abandon }}" style="width:36px;height:36px;border-radius:11px;background:#1a1c1f;border:none;color:#8a8f95;font-size:15px;cursor:pointer">✕</button>
+      <div style="text-align:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.12em;color:#c8f04a;text-transform:uppercase">{{ activeTitle }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600">{{ elapsed }}</div>
+      </div>
+      <button onClick="{{ finish }}" style="width:36px;height:36px;border-radius:11px;background:#c8f04a;border:none;color:#0c0d0f;font-weight:800;font-size:14px;cursor:pointer">✓</button>
+    </div>
+
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
+      <sc-for list="{{ exChips }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.go }}" style="{{ c.style }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+        <div style="font-size:21px;font-weight:800;letter-spacing:-.01em">{{ exName }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a8f95;white-space:nowrap">{{ exPos }}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 10px;border-radius:999px;white-space:nowrap;background:#1a1c1f;color:#c8f04a">PR: {{ exPr }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 10px;border-radius:999px;white-space:nowrap;background:#1a1c1f;color:#8a8f95">Último: {{ exLast }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 10px;border-radius:999px;white-space:nowrap;background:#1a1c1f;color:#8a8f95">Vol: {{ exVol }} kg</div>
+        <sc-if value="{{ newPr }}" hint-placeholder-val="{{ false }}">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 10px;border-radius:999px;background:#c8f04a;color:#0c0d0f;font-weight:700;animation:pulseGlow 1.6s infinite">NOVO PR</div>
+        </sc-if>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:7px">
+      <div style="display:grid;grid-template-columns:30px 1fr 1fr 54px 42px;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#5c6167;text-transform:uppercase;padding:0 6px">
+        <div>Set</div><div style="text-align:center">kg</div><div style="text-align:center">reps</div><div style="text-align:center">e1RM</div><div></div>
+      </div>
+      <sc-for list="{{ sets }}" as="s" hint-placeholder-count="3">
+        <div style="{{ s.rowStyle }}">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#8a8f95">{{ s.n }}</div>
+          <input value="{{ s.kg }}" onChange="{{ s.onKg }}" inputMode="decimal" style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;text-align:center;background:#0c0d0f;border:1px solid #24272b;border-radius:9px;padding:9px 0;color:#f2f3f0;width:100%;min-width:0" />
+          <input value="{{ s.reps }}" onChange="{{ s.onReps }}" inputMode="numeric" style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;text-align:center;background:#0c0d0f;border:1px solid #24272b;border-radius:9px;padding:9px 0;color:#f2f3f0;width:100%;min-width:0" />
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:center;color:#6aa5ff">{{ s.e1rm }}</div>
+          <button onClick="{{ s.toggle }}" style="{{ s.checkStyle }}">✓</button>
+        </div>
+      </sc-for>
+      <div style="display:flex;gap:8px">
+        <button onClick="{{ addSet }}" style="flex:1;border:1.5px dashed #2a2d31;background:none;border-radius:14px;padding:11px;text-align:center;font-size:13px;font-weight:600;color:#8a8f95;cursor:pointer;font-family:'Archivo',sans-serif">+ Série</button>
+        <button onClick="{{ removeSet }}" style="width:56px;border:1.5px dashed #2a2d31;background:none;border-radius:14px;padding:11px;color:#5c6167;cursor:pointer;font-size:13px">−</button>
+      </div>
+    </div>
+
+    <textarea value="{{ exNote }}" onChange="{{ onNote }}" placeholder="Nota do exercício…" rows="{{ two }}" style="background:#15171a;border:1px solid #1c1f23;border-radius:14px;padding:12px 14px;font-size:13px;color:#c9ccc6;line-height:1.4;resize:none;width:100%"></textarea>
+
+    <div style="display:flex;gap:10px">
+      <button onClick="{{ startRest }}" style="flex:1;background:#c8f04a;color:#0c0d0f;border:none;border-radius:14px;padding:15px;text-align:center;font-weight:800;font-size:15px;cursor:pointer;font-family:'Archivo',sans-serif">{{ restLabel }}</button>
+      <button onClick="{{ nextEx }}" style="width:56px;background:#1a1c1f;border:none;border-radius:14px;color:#f2f3f0;font-size:18px;cursor:pointer">→</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ noActive }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:22px 20px;display:flex;flex-direction:column;gap:22px">
+    <div style="font-size:26px;font-weight:800">Treino</div>
+    <div style="background:#15171a;border-radius:16px;padding:28px 20px;text-align:center;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:15px;font-weight:700">Nenhum treino em andamento</div>
+      <div style="font-size:13px;color:#8a8f95">Escolha uma ficha para começar a registrar.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ fichas }}" as="f" hint-placeholder-count="4">
+        <div style="background:#15171a;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="{{ f.badgeStyle }}">{{ f.id }}</div>
+          <div style="flex:1"><div style="font-size:16px;font-weight:700">{{ f.grupo }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a8f95;margin-top:2px">{{ f.exCount }} exercícios</div></div>
+          <button onClick="{{ f.start }}" style="background:#c8f04a;color:#0c0d0f;border:none;border-radius:12px;padding:11px 16px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Archivo',sans-serif">Iniciar</button>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</sc-if>
+
+<!-- ============ PROGRESSO ============ -->
+<sc-if value="{{ isProgresso }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Progresso" style="padding:22px 20px 10px;display:flex;flex-direction:column;gap:18px">
+  <div style="font-size:26px;font-weight:800">Progresso</div>
+
+  <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
+    <sc-for list="{{ progressChips }}" as="c" hint-placeholder-count="5">
+      <button onClick="{{ c.go }}" style="{{ c.style }}">{{ c.name }}</button>
+    </sc-for>
+  </div>
+
+  <div style="background:#15171a;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#8a8f95;text-transform:uppercase">e1RM · 10 semanas</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#c8f04a">{{ chartDelta }}</div>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:5px;height:110px">
+      <sc-for list="{{ bars }}" as="b" hint-placeholder-count="10">
+        <div style="{{ b.style }}"></div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid #1c1f23;padding-top:12px">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">PR atual</div><div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:#c8f04a">{{ selPr }}</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">e1RM máx</div><div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600">{{ selE1rm }}</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">10 sem</div><div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:#6aa5ff">{{ selGrowth }}</div></div>
+    </div>
+  </div>
+
+  <div style="background:#15171a;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#8a8f95;text-transform:uppercase">Volume · semana a semana</div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <sc-for list="{{ weekBars }}" as="w" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:58px 1fr 62px;gap:10px;align-items:center">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a8f95">{{ w.label }}</div>
+          <div style="height:10px;background:#0c0d0f;border-radius:5px;overflow:hidden"><div style="{{ w.fill }}"></div></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:right;color:#c9ccc6">{{ w.vol }} kg</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8a8f95;text-transform:uppercase">Recordes pessoais</div>
+    <sc-for list="{{ prs }}" as="p" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:12px;background:#101214;border:1px solid #1c1f23;border-radius:14px;padding:12px 14px">
+        <div style="flex:1;font-size:14px;font-weight:600">{{ p.name }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#c8f04a">{{ p.kg }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5c6167;width:48px;text-align:right">{{ p.date }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ AGENDA ============ -->
+<sc-if value="{{ isAgenda }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Agenda" style="padding:22px 20px 10px;display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:26px;font-weight:800">Agenda</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#c8f04a">{{ monthLabel }}</div>
+  </div>
+
+  <div style="background:#15171a;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:#5c6167;text-align:center;text-transform:uppercase">
+      <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+      <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+        <div style="{{ d.style }}">{{ d.label }}</div>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:14px;border-top:1px solid #1c1f23;padding-top:12px">
+      <div style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a8f95"><div style="width:10px;height:10px;border-radius:3px;background:#c8f04a"></div>Treinou</div>
+      <div style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a8f95"><div style="width:10px;height:10px;border-radius:3px;border:1px solid #3a3e43"></div>Hoje</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="background:#15171a;border-radius:14px;padding:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">Treinos no mês</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:#c8f04a">{{ monthCount }}</div>
+    </div>
+    <div style="background:#15171a;border-radius:14px;padding:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:#8a8f95;text-transform:uppercase">Média semanal</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">{{ weekAvg }}</div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8a8f95;text-transform:uppercase">Histórico</div>
+    <sc-for list="{{ historyList }}" as="h" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:12px;background:#101214;border:1px solid #1c1f23;border-radius:14px;padding:12px 14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#c8f04a;font-weight:600;width:52px">{{ h.date }}</div>
+        <div style="flex:1;font-size:14px;font-weight:600">{{ h.title }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a8f95">{{ h.vol }} kg</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ REST OVERLAY ============ -->
+<sc-if value="{{ restActive }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:#c8f04a;color:#0c0d0f;border-radius:999px;padding:12px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 28px rgba(200,240,74,.3);z-index:60">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700">{{ restLeft }}</div>
+  <div style="font-size:12px;font-weight:700;letter-spacing:.06em">DESCANSO</div>
+  <button onClick="{{ cancelRest }}" style="background:rgba(12,13,15,.15);border:none;border-radius:999px;width:26px;height:26px;font-size:12px;cursor:pointer;color:#0c0d0f">✕</button>
+</div>
+</sc-if>
+
+<!-- ============ TAB BAR ============ -->
+<div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(12,13,15,.92);backdrop-filter:blur(12px);border-top:1px solid #1c1f23;display:grid;grid-template-columns:repeat(4,1fr);z-index:50">
+  <sc-for list="{{ navItems }}" as="t" hint-placeholder-count="4">
+    <button onClick="{{ t.go }}" style="{{ t.style }}">
+      <div style="{{ t.barStyle }}"></div>
+      {{ t.label }}
+    </button>
+  </sc-for>
+</div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 430, &quot;height&quot;: 900}, &quot;descansoSegundos&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 90, &quot;min&quot;: 30, &quot;max&quot;: 300, &quot;step&quot;: 15, &quot;unit&quot;: &quot;s&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Treino&quot;}, &quot;descansoAutomatico&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Treino&quot;}, &quot;metaSemanal&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 4, &quot;min&quot;: 1, &quot;max&quot;: 7, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Metas&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.FICHAS = [
+      { id: 'A', grupo: 'Peito e Tríceps', ex: ['Supino Reto', 'Supino Inclinado Halteres', 'Crucifixo na Polia', 'Tríceps Corda', 'Tríceps Francês'] },
+      { id: 'B', grupo: 'Costas e Bíceps', ex: ['Barra Fixa', 'Remada Curvada', 'Puxada Alta', 'Rosca Direta', 'Rosca Martelo'] },
+      { id: 'C', grupo: 'Pernas', ex: ['Agachamento Livre', 'Leg Press', 'Cadeira Extensora', 'Mesa Flexora', 'Panturrilha em Pé'] },
+      { id: 'D', grupo: 'Ombros e Core', ex: ['Desenvolvimento Halteres', 'Elevação Lateral', 'Elevação Frontal', 'Encolhimento', 'Abdominal Cabo'] },
+    ];
+    this.EX = {
+      'Supino Reto': this.mkEx(82.5, 80, 8, 62.5),
+      'Supino Inclinado Halteres': this.mkEx(32, 30, 10, 22),
+      'Crucifixo na Polia': this.mkEx(22, 20, 12, 14),
+      'Tríceps Corda': this.mkEx(35, 32.5, 12, 25),
+      'Tríceps Francês': this.mkEx(27.5, 25, 10, 18),
+      'Barra Fixa': this.mkEx(15, 10, 8, 0),
+      'Remada Curvada': this.mkEx(75, 70, 8, 55),
+      'Puxada Alta': this.mkEx(70, 65, 10, 50),
+      'Rosca Direta': this.mkEx(35, 32.5, 10, 24),
+      'Rosca Martelo': this.mkEx(16, 14, 12, 10),
+      'Agachamento Livre': this.mkEx(110, 105, 6, 80),
+      'Leg Press': this.mkEx(240, 220, 10, 160),
+      'Cadeira Extensora': this.mkEx(70, 65, 12, 45),
+      'Mesa Flexora': this.mkEx(55, 50, 12, 35),
+      'Panturrilha em Pé': this.mkEx(120, 110, 15, 80),
+      'Desenvolvimento Halteres': this.mkEx(28, 26, 8, 18),
+      'Elevação Lateral': this.mkEx(12, 10, 12, 7),
+      'Elevação Frontal': this.mkEx(10, 9, 12, 6),
+      'Encolhimento': this.mkEx(90, 85, 12, 60),
+      'Abdominal Cabo': this.mkEx(45, 40, 15, 30),
+    };
+    this.state = {
+      tab: 'inicio',
+      active: null,
+      sessions: this.seedSessions(),
+      restUntil: null,
+      progressEx: 'Supino Reto',
+      loaded: false,
+    };
+  }
+
+  mkEx(pr, lastKg, lastReps, startKg) {
+    var hist = [];
+    for (var i = 0; i < 10; i++) {
+      var kg = startKg + (lastKg - startKg) * (i / 9);
+      hist.push(Math.round(kg * (1 + 9 / 30) * 2) / 2);
+    }
+    return { pr: pr, lastKg: lastKg, lastReps: lastReps, hist: hist };
+  }
+
+  seedSessions() {
+    var out = [];
+    var now = new Date();
+    var fichaIdx = 0;
+    for (var w = 8; w >= 1; w--) {
+      var days = [1, 3, 5];
+      for (var d = 0; d < days.length; d++) {
+        var dt = new Date(now);
+        dt.setDate(now.getDate() - now.getDay() - w * 7 + days[d]);
+        var f = this.FICHAS[fichaIdx % 4];
+        fichaIdx++;
+        out.push({
+          date: dt.toISOString().slice(0, 10),
+          fichaId: f.id,
+          grupo: f.grupo,
+          vol: 4200 + ((w * 7 + d * 13) % 9) * 240 + (8 - w) * 180,
+          durMin: 48 + ((w + d * 5) % 4) * 6,
+        });
+      }
+    }
+    var thisMon = new Date(now);
+    thisMon.setDate(now.getDate() - now.getDay() + 1);
+    if (thisMon <= now) {
+      out.push({ date: thisMon.toISOString().slice(0, 10), fichaId: 'A', grupo: 'Peito e Tríceps', vol: 6180, durMin: 52 });
+    }
+    return out;
+  }
+
+  componentDidMount() {
+    try {
+      var raw = localStorage.getItem('treino-backlog-v1');
+      if (raw) {
+        var data = JSON.parse(raw);
+        this.setState({
+          active: data.active || null,
+          sessions: (data.sessions && data.sessions.length ? data.sessions : this.state.sessions),
+          loaded: true,
+        });
+      } else { this.setState({ loaded: true }); }
+    } catch (e) { this.setState({ loaded: true }); }
+    this._int = setInterval(() => {
+      if (this.state.active || this.state.restUntil) this.forceUpdate();
+    }, 1000);
+  }
+
+  componentWillUnmount() { clearInterval(this._int); }
+
+  persist() {
+    try {
+      localStorage.setItem('treino-backlog-v1', JSON.stringify({ active: this.state.active, sessions: this.state.sessions }));
+    } catch (e) {}
+  }
+
+  set(patch) { this.setState(patch, () => this.persist()); }
+
+  num(v) { var n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; }
+  e1rm(kg, reps) { return kg > 0 && reps > 0 ? kg * (1 + reps / 30) : 0; }
+  fmtKg(n) { return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }); }
+
+  startFicha(f) {
+    var exs = f.ex.map((name) => {
+      var d = this.EX[name];
+      return {
+        name: name,
+        note: '',
+        sets: [0, 1, 2].map(() => ({ kg: String(d.lastKg).replace('.', ','), reps: String(d.lastReps), done: false })),
+      };
+    });
+    this.set({
+      active: { fichaId: f.id, grupo: f.grupo, startTs: Date.now(), exIndex: 0, exercises: exs },
+      tab: 'treino',
+    });
+  }
+
+  finishWorkout() {
+    var a = this.state.active;
+    if (!a) return;
+    var vol = 0;
+    a.exercises.forEach((ex) => ex.sets.forEach((s) => { if (s.done) vol += this.num(s.kg) * this.num(s.reps); }));
+    var mins = Math.max(1, Math.round((Date.now() - a.startTs) / 60000));
+    var sess = { date: new Date().toISOString().slice(0, 10), fichaId: a.fichaId, grupo: a.grupo, vol: Math.round(vol), durMin: mins };
+    this.set({ sessions: this.state.sessions.concat([sess]), active: null, restUntil: null, tab: 'inicio' });
+  }
+
+  updActive(fn) {
+    var a = JSON.parse(JSON.stringify(this.state.active));
+    fn(a);
+    this.set({ active: a });
+  }
+
+  fmtDate(iso) {
+    var p = iso.split('-');
+    return p[2] + '/' + p[1];
+  }
+
+  renderVals() {
+    var st = this.state;
+    var now = new Date();
+    var restSecs = this.props.descansoSegundos ?? 90;
+    var meta = this.props.metaSemanal ?? 4;
+    var autoRest = this.props.descansoAutomatico ?? true;
+
+    // ---- nav ----
+    var tabs = [
+      { key: 'inicio', label: 'Início' },
+      { key: 'treino', label: 'Treino' },
+      { key: 'progresso', label: 'Progresso' },
+      { key: 'agenda', label: 'Agenda' },
+    ];
+    var navItems = tabs.map((t) => ({
+      label: t.label,
+      go: () => this.setState({ tab: t.key }),
+      style: {
+        position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
+        padding: '16px 0 20px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px',
+        letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600,
+        color: st.tab === t.key ? '#c8f04a' : '#5c6167',
+      },
+      barStyle: {
+        position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '28px', height: '2px', borderRadius: '2px',
+        background: st.tab === t.key ? '#c8f04a' : 'transparent',
+      },
+    }));
+
+    // ---- fichas ----
+    var lastByFicha = {};
+    st.sessions.forEach((s) => {
+      if (!lastByFicha[s.fichaId] || s.date > lastByFicha[s.fichaId]) lastByFicha[s.fichaId] = s.date;
+    });
+    var fichas = this.FICHAS.map((f) => ({
+      id: f.id,
+      grupo: f.grupo,
+      exCount: f.ex.length,
+      lastLabel: lastByFicha[f.id] ? 'último ' + this.fmtDate(lastByFicha[f.id]) : 'nunca feito',
+      start: () => this.startFicha(f),
+      badgeStyle: {
+        width: '44px', height: '44px', borderRadius: '13px', background: '#0c0d0f',
+        border: '1px solid #2a2d31', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'IBM Plex Mono',monospace", fontSize: '17px', fontWeight: 700, color: '#c8f04a', flexShrink: 0,
+      },
+    }));
+
+    // ---- week stats ----
+    var monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7)); monday.setHours(0, 0, 0, 0);
+    var mondayIso = monday.toISOString().slice(0, 10);
+    var weekSessions = st.sessions.filter((s) => s.date >= mondayIso);
+    var weekVolume = weekSessions.reduce((a, s) => a + s.vol, 0);
+    var streak = 0;
+    for (var w = 0; w < 20; w++) {
+      var ws = new Date(monday); ws.setDate(monday.getDate() - w * 7);
+      var we = new Date(ws); we.setDate(ws.getDate() + 7);
+      var wsIso = ws.toISOString().slice(0, 10), weIso = we.toISOString().slice(0, 10);
+      var count = st.sessions.filter((s) => s.date >= wsIso && s.date < weIso).length;
+      if (count > 0) streak++; else if (w > 0) break;
+    }
+
+    var recent = st.sessions.slice(-4).reverse().map((s) => ({
+      date: this.fmtDate(s.date), title: 'Treino ' + s.fichaId + ' · ' + s.grupo,
+      vol: s.vol.toLocaleString('pt-BR'), dur: s.durMin + 'min',
+    }));
+
+    // ---- active workout ----
+    var a = st.active;
+    var vals = {};
+    if (a) {
+      var ex = a.exercises[a.exIndex];
+      var d = this.EX[ex.name] || { pr: 0, lastKg: 0, lastReps: 0, hist: [] };
+      var secs = Math.floor((Date.now() - a.startTs) / 1000);
+      var exVol = 0, maxE = 0;
+      ex.sets.forEach((s) => { if (s.done) { exVol += this.num(s.kg) * this.num(s.reps); maxE = Math.max(maxE, this.num(s.kg)); } });
+      vals.activeTitle = 'Treino ' + a.fichaId + ' · ' + a.grupo;
+      vals.elapsed = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0');
+      vals.exName = ex.name;
+      vals.exPos = (a.exIndex + 1) + '/' + a.exercises.length + ' exercícios';
+      vals.exPr = this.fmtKg(d.pr) + ' kg';
+      vals.exLast = this.fmtKg(d.lastKg) + ' × ' + d.lastReps;
+      vals.exVol = Math.round(exVol).toLocaleString('pt-BR');
+      vals.newPr = maxE > d.pr;
+      vals.exNote = ex.note;
+      vals.onNote = (e) => this.updActive((x) => { x.exercises[x.exIndex].note = e.target.value; });
+      vals.sets = ex.sets.map((s, i) => ({
+        n: i + 1,
+        kg: s.kg,
+        reps: s.reps,
+        e1rm: s.done || (this.num(s.kg) > 0 && this.num(s.reps) > 0) ? this.fmtKg(Math.round(this.e1rm(this.num(s.kg), this.num(s.reps)) * 10) / 10) : '—',
+        onKg: (e) => this.updActive((x) => { x.exercises[x.exIndex].sets[i].kg = e.target.value; }),
+        onReps: (e) => this.updActive((x) => { x.exercises[x.exIndex].sets[i].reps = e.target.value; }),
+        toggle: () => {
+          var wasDone = this.state.active.exercises[this.state.active.exIndex].sets[i].done;
+          this.updActive((x) => { x.exercises[x.exIndex].sets[i].done = !wasDone; });
+          if (!wasDone && autoRest) this.setState({ restUntil: Date.now() + restSecs * 1000 });
+        },
+        rowStyle: {
+          display: 'grid', gridTemplateColumns: '30px 1fr 1fr 54px 42px', gap: '8px', alignItems: 'center',
+          background: s.done ? '#15171a' : '#1a1c1f', borderRadius: '14px', padding: '8px 6px 8px 12px',
+          border: s.done ? '1px solid transparent' : '1px solid #24272b',
+          opacity: s.done ? 0.55 : 1,
+        },
+        checkStyle: {
+          width: '38px', height: '38px', borderRadius: '11px', cursor: 'pointer', fontSize: '14px', fontWeight: 800,
+          background: s.done ? '#c8f04a' : 'transparent',
+          color: s.done ? '#0c0d0f' : '#5c6167',
+          border: s.done ? 'none' : '1.5px solid #3a3e43',
+        },
+      }));
+      vals.addSet = () => this.updActive((x) => {
+        var sets = x.exercises[x.exIndex].sets;
+        var last = sets[sets.length - 1] || { kg: '', reps: '' };
+        sets.push({ kg: last.kg, reps: last.reps, done: false });
+      });
+      vals.removeSet = () => this.updActive((x) => {
+        var sets = x.exercises[x.exIndex].sets;
+        if (sets.length > 1) sets.pop();
+      });
+      vals.exChips = a.exercises.map((e2, i) => {
+        var allDone = e2.sets.length > 0 && e2.sets.every((s) => s.done);
+        var cur = i === a.exIndex;
+        return {
+          label: (i + 1) + ' ' + (e2.name.length > 14 ? e2.name.slice(0, 13) + '…' : e2.name),
+          go: () => this.updActive((x) => { x.exIndex = i; }),
+          style: {
+            flexShrink: 0, cursor: 'pointer', fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px',
+            padding: '7px 12px', borderRadius: '999px', whiteSpace: 'nowrap',
+            background: cur ? '#c8f04a' : '#1a1c1f',
+            color: cur ? '#0c0d0f' : (allDone ? '#c8f04a' : '#8a8f95'),
+            border: 'none', fontWeight: 600,
+          },
+        };
+      });
+      vals.nextEx = () => this.updActive((x) => { x.exIndex = Math.min(x.exIndex + 1, x.exercises.length - 1); });
+      vals.abandon = () => { if (window.confirm('Descartar este treino?')) this.set({ active: null, restUntil: null, tab: 'inicio' }); };
+      vals.finish = () => this.finishWorkout();
+      vals.startRest = () => this.setState({ restUntil: Date.now() + restSecs * 1000 });
+      vals.restLabel = 'Descanso ' + restSecs + 's';
+    }
+
+    // ---- rest ----
+    var restActive = st.restUntil && st.restUntil > Date.now();
+    var restLeft = restActive ? Math.ceil((st.restUntil - Date.now()) / 1000) + 's' : '';
+    if (st.restUntil && !restActive) setTimeout(() => this.setState({ restUntil: null }), 0);
+
+    // ---- progresso ----
+    var selName = st.progressEx;
+    var sel = this.EX[selName];
+    var chipNames = ['Supino Reto', 'Agachamento Livre', 'Remada Curvada', 'Desenvolvimento Halteres', 'Barra Fixa', 'Leg Press'];
+    var progressChips = chipNames.map((n) => ({
+      name: n,
+      go: () => this.setState({ progressEx: n }),
+      style: {
+        flexShrink: 0, cursor: 'pointer', fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px',
+        padding: '8px 13px', borderRadius: '999px', whiteSpace: 'nowrap', border: 'none', fontWeight: 600,
+        background: n === selName ? '#c8f04a' : '#1a1c1f',
+        color: n === selName ? '#0c0d0f' : '#8a8f95',
+      },
+    }));
+    var hist = sel.hist;
+    var hmax = Math.max.apply(null, hist), hmin = Math.min.apply(null, hist);
+    var bars = hist.map((v, i) => ({
+      style: {
+        flex: 1, borderRadius: '4px 4px 0 0',
+        height: Math.round(18 + ((v - hmin) / Math.max(1, hmax - hmin)) * 82) + '%',
+        background: i === hist.length - 1 ? '#c8f04a' : (i >= hist.length - 3 ? '#5a6b28' : '#24272b'),
+      },
+    }));
+    var growth = hist[hist.length - 1] - hist[0];
+    vals.chartDelta = '+' + this.fmtKg(growth) + ' kg ↗';
+    vals.selPr = this.fmtKg(sel.pr) + ' kg';
+    vals.selE1rm = this.fmtKg(hist[hist.length - 1]) + ' kg';
+    vals.selGrowth = '+' + Math.round((growth / Math.max(1, hist[0])) * 100) + '%';
+
+    var weekBars = [];
+    var maxWeekVol = 1;
+    var weekVols = [];
+    for (var wi = 3; wi >= 0; wi--) {
+      var ws2 = new Date(monday); ws2.setDate(monday.getDate() - wi * 7);
+      var we2 = new Date(ws2); we2.setDate(ws2.getDate() + 7);
+      var wsI = ws2.toISOString().slice(0, 10), weI = we2.toISOString().slice(0, 10);
+      var vol = st.sessions.filter((s) => s.date >= wsI && s.date < weI).reduce((acc, s) => acc + s.vol, 0);
+      weekVols.push({ label: wi === 0 ? 'Atual' : '−' + wi + ' sem', vol: vol });
+      maxWeekVol = Math.max(maxWeekVol, vol);
+    }
+    weekBars = weekVols.map((w2, i) => ({
+      label: w2.label,
+      vol: (w2.vol / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k',
+      fill: {
+        height: '100%', borderRadius: '5px',
+        width: Math.round((w2.vol / maxWeekVol) * 100) + '%',
+        background: i === weekVols.length - 1 ? '#c8f04a' : '#3a3e43',
+      },
+    }));
+
+    var prNames = ['Supino Reto', 'Agachamento Livre', 'Remada Curvada', 'Desenvolvimento Halteres', 'Leg Press'];
+    var prDates = ['28/06', '21/06', '25/06', '14/06', '30/06'];
+    var prs = prNames.map((n, i) => ({ name: n, kg: this.fmtKg(this.EX[n].pr) + ' kg', date: prDates[i] }));
+
+    // ---- agenda ----
+    var trained = {};
+    st.sessions.forEach((s) => { trained[s.date] = true; });
+    var y = now.getFullYear(), m = now.getMonth();
+    var first = new Date(y, m, 1);
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var days = [];
+    for (var pad = 0; pad < first.getDay(); pad++) days.push({ label: '', style: { height: '38px' } });
+    var monthCount = 0;
+    for (var dn = 1; dn <= daysInMonth; dn++) {
+      var iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(dn).padStart(2, '0');
+      var isTrained = !!trained[iso];
+      if (isTrained) monthCount++;
+      var isToday = dn === now.getDate();
+      days.push({
+        label: String(dn),
+        style: {
+          height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', borderRadius: '10px',
+          background: isTrained ? '#c8f04a' : 'transparent',
+          color: isTrained ? '#0c0d0f' : (dn > now.getDate() ? '#3a3e43' : '#8a8f95'),
+          fontWeight: isTrained ? 700 : 400,
+          border: isToday && !isTrained ? '1px solid #3a3e43' : (isToday && isTrained ? '2px solid #f2f3f0' : 'none'),
+        },
+      });
+    }
+    var monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    var weeksElapsed = Math.max(1, Math.ceil(now.getDate() / 7));
+    var historyList = st.sessions.slice(-8).reverse().map((s) => ({
+      date: this.fmtDate(s.date), title: 'Treino ' + s.fichaId + ' · ' + s.grupo, vol: s.vol.toLocaleString('pt-BR'),
+    }));
+
+    var dowNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+    return Object.assign({
+      isInicio: st.tab === 'inicio',
+      isTreino: st.tab === 'treino',
+      isProgresso: st.tab === 'progresso',
+      isAgenda: st.tab === 'agenda',
+      hasActive: !!a,
+      noActive: !a,
+      todayLabel: dowNames[now.getDay()] + ', ' + now.getDate() + ' de ' + monthNames[now.getMonth()].toLowerCase(),
+      initials: 'EU',
+      weekCount: weekSessions.length,
+      metaSemanal: meta,
+      weekVolume: (weekVolume / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k',
+      streak: streak,
+      fichas: fichas,
+      recent: recent,
+      navItems: navItems,
+      restActive: !!restActive,
+      restLeft: restLeft,
+      cancelRest: () => this.setState({ restUntil: null }),
+      progressChips: progressChips,
+      bars: bars,
+      weekBars: weekBars,
+      prs: prs,
+      days: days,
+      monthLabel: monthNames[m] + ' ' + y,
+      monthCount: monthCount,
+      weekAvg: (monthCount / weeksElapsed).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'x',
+      historyList: historyList,
+      two: 2,
+    }, vals);
+  }
+}
+</script>
+</body>
+</html>
