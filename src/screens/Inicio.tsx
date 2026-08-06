@@ -15,7 +15,7 @@ export function Inicio({
   onNewFicha: () => void
   onOpenSession: (s: Session) => void
 }) {
-  const { profile, email, fichas, sessions, startFicha, loadExampleData } = useApp()
+  const { profile, email, fichas, sessions, startFicha } = useApp()
   const now = new Date()
 
   const week = weekSessions(sessions, now)
@@ -109,15 +109,10 @@ export function Inicio({
       <div className="stack">
         <div className="section-label">Últimos treinos</div>
         {recent.length === 0 ? (
-          <>
-            <div className="empty-card">
-              <div className="empty-title">Nenhum treino registrado</div>
-              <div className="empty-sub">Inicie uma ficha acima para registrar o primeiro.</div>
-            </div>
-            <button className="btn-example" onClick={loadExampleData}>
-              Carregar dados de exemplo
-            </button>
-          </>
+          <div className="empty-card">
+            <div className="empty-title">Nenhum treino registrado</div>
+            <div className="empty-sub">Inicie uma ficha acima para registrar o primeiro.</div>
+          </div>
         ) : (
           recent.map((s) => (
             <SessionRow

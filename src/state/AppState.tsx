@@ -7,7 +7,6 @@ import { parseNum, parseReps } from '../lib/format'
 import { loadActive, loadCache, loadFichaOps, loadOutbox, saveActive, saveCache, saveFichaOps, saveOutbox } from '../lib/storage'
 import type { FichaOp } from '../lib/storage'
 import { fetchFichas, fetchProfile, fetchSessions, pushFichaOp, pushProfile, pushSession } from '../lib/db'
-import { defaultFichas, generateExampleSessions } from '../lib/exampleData'
 import { supabase } from '../lib/supabase'
 
 interface AppStateValue {
@@ -34,7 +33,6 @@ interface AppStateValue {
   updateSettings: (patch: Partial<Pick<Profile, 'descansoSegundos' | 'descansoAutomatico' | 'metaSemanal'>>) => void
   saveFicha: (ficha: Ficha, deletedExerciseIds: string[]) => void
   archiveFicha: (fichaId: string) => void
-  loadExampleData: () => void
   signOut: () => void
 }
 
@@ -415,16 +413,6 @@ export function AppProvider({ userId, email, children }: { userId: string; email
     [persistCache, enqueueFichaOp]
   )
 
-  const loadExampleData = useCallback(() => {
-    // Conta vazia: o exemplo cria também as 4 fichas clássicas (A–D).
-    let baseFichas = fichas
-    if (baseFichas.length === 0) {
-      baseFichas = defaultFichas()
-      for (const f of baseFichas) saveFicha(f, [])
-    }
-    enqueueSessions(generateExampleSessions(baseFichas, new Date()))
-  }, [fichas, saveFicha, enqueueSessions])
-
   const signOut = useCallback(() => {
     supabase.auth.signOut()
   }, [])
@@ -453,7 +441,6 @@ export function AppProvider({ userId, email, children }: { userId: string; email
     updateSettings,
     saveFicha,
     archiveFicha,
-    loadExampleData,
     signOut,
   }
 

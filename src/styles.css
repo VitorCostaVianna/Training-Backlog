@@ -400,18 +400,6 @@ a:hover {
   color: var(--text-2);
 }
 
-.btn-example {
-  border: 1.5px dashed var(--border-dash);
-  background: none;
-  border-radius: 14px;
-  padding: 12px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-}
-
 /* ============ Treino ============ */
 .workout-screen {
   padding: calc(18px + env(safe-area-inset-top, 0px)) 20px 10px;
