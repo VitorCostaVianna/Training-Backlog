@@ -105,6 +105,16 @@ describe('buildExerciseStats', () => {
     expect(s.prDate).toBe('2026-01-12')
   })
 
+  it('empate no PR mantém a data da primeira vez que o peso foi atingido', () => {
+    const sessions = [
+      makeSession('2026-01-05', [makeExercise('Supino Reto', [makeSet({ kg: 85, reps: 5, done: true })])]),
+      makeSession('2026-01-12', [makeExercise('Supino Reto', [makeSet({ kg: 85, reps: 8, done: true })])]),
+    ]
+    const s = buildExerciseStats(sessions, now).get('Supino Reto')!
+    expect(s.pr).toBe(85)
+    expect(s.prDate).toBe('2026-01-05') // `>` e não `>=`
+  })
+
   it('"último" reflete a sessão mais recente por data, não a última do array', () => {
     const sessions = [
       makeSession('2026-01-19', [makeExercise('Supino Reto', [makeSet({ kg: 82, reps: 10, done: true })])]),
