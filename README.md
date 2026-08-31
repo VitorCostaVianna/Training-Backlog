@@ -1,63 +1,49 @@
-# Backlog de Treino
+# Training Backlog
 
-PWA mobile-first (pt-BR) para registrar treinos de musculação e acompanhar progressão.
-React + Vite + TypeScript no frontend; Supabase (Postgres + Auth + RLS) no backend;
-offline-first com cache local e fila de sincronização.
+A mobile-first Progressive Web App for logging strength-training workouts and tracking progression over time.
 
-Design de referência em [design_handoff_backlog_treino/](design_handoff_backlog_treino/).
+**Live demo:** [backlog-treino.vercel.app](https://backlog-treino.vercel.app)
+
+## Overview
+
+React + Vite + TypeScript on the frontend, Supabase (Postgres + Auth + Row Level Security) on the backend, built **offline-first** with local caching and a sync queue — the app stays fully usable without a network connection, and syncs automatically once connectivity returns.
+
+Design reference in [`design_handoff_backlog_treino/`](./design_handoff_backlog_treino).
+
+## Architecture
+
+**Auth** — Email/password via Supabase Auth ([`src/screens/Auth.tsx`](./src/screens/Auth.tsx)). A `handle_new_user` database trigger seeds each new account with a profile and four default workout templates (A–D) — structural templates only, no fake history. The first empty screen has an explicit "Load sample data" button instead.
+
+**Offline-first** ([`src/lib/storage.ts`](./src/lib/storage.ts))
+- The **active workout in progress** lives only on-device (`localStorage`), never depends on the network, and survives page reload or a crash. Reopening the app with an active session resumes directly on the Workout tab.
+- Remote reads are mirrored into a **per-user local cache**; with no network, the app renders entirely from cache.
+- Completed workouts are queued in an **outbox** with client-generated UUIDs and sent via idempotent upsert once connectivity returns (on the browser's `online` event or next app boot).
+
+**Derived statistics** ([`src/lib/stats.ts`](./src/lib/stats.ts)) — PRs, "last weight × reps," 10-week e1RM history (Epley formula), and weekly volume/streak are all computed from the real set-by-set history, with nothing denormalized in the database.
+
+**PWA** — `vite-plugin-pwa` (Workbox) pre-caches the app shell and runtime-caches Google Fonts; manifest and icons live in [`public/icons/`](./public/icons). Installable on iOS/Android via "Add to Home Screen."
+
+**Privacy** — The client only ever uses the anon key; account isolation is enforced entirely by Postgres Row Level Security policies, not by client-side filtering.
 
 ## Setup
 
-1. **Crie um projeto no [Supabase](https://supabase.com)** (gratuito).
-2. **Rode a migração**: no dashboard, abra *SQL Editor*, cole o conteúdo de
-   [supabase/migration.sql](supabase/migration.sql) e execute. Isso cria as tabelas
-   (`profiles`, `fichas`, `ficha_exercises`, `sessions`, `session_exercises`, `session_sets`),
-   habilita Row Level Security em todas (cada usuário só lê/escreve as próprias linhas)
-   e instala o trigger de signup que cria o perfil + 4 fichas padrão (A–D).
-3. **Configure o ambiente**: copie `.env.example` para `.env` e preencha
-   `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
-   (dashboard → *Project Settings* → *API*).
-4. **(Opcional, recomendado para testar)** desative a confirmação de e-mail em
-   *Authentication → Sign In / Providers → Email → Confirm email*, para o cadastro
-   entrar direto sem clicar em link de confirmação.
-5. **Rode**:
+1. Create a free project on [Supabase](https://supabase.com).
+2. **Run the migration:** in the dashboard, open *SQL Editor*, paste the contents of [`supabase/migration.sql`](./supabase/migration.sql), and execute. This creates the tables (`profiles`, `fichas`, `ficha_exercises`, `sessions`, `session_exercises`, `session_sets`), enables Row Level Security on all of them, and installs the signup trigger.
+3. **Configure environment:** copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (dashboard → *Project Settings* → *API*).
+4. *(Optional, recommended for testing)* Disable email confirmation under *Authentication → Sign In / Providers → Email → Confirm email*, so sign-up doesn't require clicking a confirmation link.
+5. **Run:**
 
-   ```sh
-   npm install
-   npm run dev        # desenvolvimento
-   npm run build      # produção (dist/) — inclui service worker
-   npm run preview    # serve o build de produção
-   ```
+```bash
+npm install
+npm run dev        # development
+npm run build      # production build (dist/) — includes the service worker
+npm run preview    # serve the production build
+```
 
-## Arquitetura
+## Out of scope (for now)
 
-- **Auth**: e-mail/senha via Supabase Auth ([src/screens/Auth.tsx](src/screens/Auth.tsx)).
-  O trigger `handle_new_user` (na migração) semeia perfil e fichas padrão — estrutura de
-  template, sem histórico falso. Na primeira tela vazia há um botão explícito
-  "Carregar dados de exemplo".
-- **Offline-first** ([src/lib/storage.ts](src/lib/storage.ts)):
-  - O **treino em andamento** vive só no dispositivo (`localStorage`), nunca depende de rede
-    e sobrevive a reload/crash. Ao reabrir com treino ativo, o app volta direto à aba Treino.
-  - Leituras remotas são espelhadas num **cache local** por usuário; sem rede, o app
-    renderiza tudo a partir do cache.
-  - Treinos concluídos entram numa **fila (outbox)** com UUIDs gerados no cliente e são
-    enviados via upsert (idempotente) quando a conexão volta (`online` event / próximo boot).
-- **Estatísticas derivadas** ([src/lib/stats.ts](src/lib/stats.ts)): PR, "último kg × reps",
-  histórico de e1RM (Epley, 10 semanas), volume/sequência semanal — tudo calculado do
-  histórico real de séries, nada denormalizado no banco.
-- **PWA**: `vite-plugin-pwa` (Workbox) pré-cacheia o app shell e faz runtime-cache das
-  fontes do Google; manifest + ícones em [public/icons/](public/icons/). Instalável em
-  iOS/Android ("Adicionar à tela de início").
-- **Privacidade**: o cliente usa apenas a anon key; o isolamento entre contas é garantido
-  pelas políticas de RLS no Postgres, não por filtro no cliente.
+Billing/subscriptions and native packaging (Capacitor) — the architecture (private accounts, RLS, client-generated IDs, outbox pattern) was deliberately designed to accommodate both later without rework.
 
-## Deploy
+## Contact
 
-Produção: **https://backlog-treino.vercel.app** (projeto Vercel `backlog-treino`, conectado
-a este repositório — todo push na branch `main` faz deploy automático). As variáveis
-`VITE_SUPABASE_*` estão configuradas no ambiente Production da Vercel.
-
-## Fora de escopo (por ora)
-
-Billing/assinaturas e empacotamento nativo (Capacitor) — a arquitetura (contas privadas,
-RLS, IDs de cliente, outbox) foi pensada para acomodá-los depois sem retrabalho.
+Developed by Vitor Costa · [LinkedIn](https://www.linkedin.com/in/vitor-costa-vianna-5449832b8/) · vitorcostavianna@gmail.com
